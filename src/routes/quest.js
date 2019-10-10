@@ -103,6 +103,20 @@ router.patch("/quests/:id", auth, async (req, res) => {
     res.status(400).send();
   }
 });
+
 //delete a quest
+router.delete("/quests/:id", auth, async (req, res) => {
+  try {
+    const quest = await Quest.findOne({
+      _id: req.params.id,
+      owner: req.user._id
+    });
+    if (!quest) return res.status(400).send();
+    await quest.remove();
+    res.send({ quest, message: "quest deleted" });
+  } catch (err) {
+    res.status(500).send();
+  }
+});
 
 module.exports = router;
