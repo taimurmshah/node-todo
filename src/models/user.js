@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const Quest = require("./quest");
 
 const userSchema = new mongoose.Schema(
   {
@@ -9,6 +10,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true
+    },
+    mood: {
+      type: String,
+      trim: true,
+      default: "happy"
     },
     email: {
       type: String,
@@ -52,6 +58,12 @@ const userSchema = new mongoose.Schema(
   }
 );
 
+userSchema.virtual("quests", {
+  ref: "Quest",
+  localField: "_id",
+  foreignField: "owner"
+});
+
 userSchema.methods.toJSON = function() {
   const user = this;
   const userObj = user.toObject();
@@ -93,6 +105,12 @@ userSchema.methods.generateAuthToken = async function() {
 
   return token;
 };
+
+userSchema.pre("remove", async function(next) {
+  const user = this;
+  await Quest.deleteMany({ owner: user._id });
+  next();
+});
 
 const User = mongoose.model("User", userSchema);
 
